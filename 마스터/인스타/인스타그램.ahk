@@ -424,24 +424,27 @@ fn_Gui_Event_Gui_Save(hwnd, event, info, err := "") {
 
 fn_Web_Insta_Login(id, pw) {
 
-	if(!p.url)
-	{
-		p.Start()
+	p.Get("chrome-extension://nlhjgcligpbnjphflfdbmabbmjidnmek/main/index.html")
+	p.get("https://www.instagram.com/")
 
-		while(!InStr(p.url, "instagram"))
-		{
-			p.SwitchToNextWindow()
-			sleep, 2000
-		}
-	}
+	; if(!p.url)
+	; {
+	; 	p.Start()
+
+	; 	msgbox
+	; 	while(!InStr(p.url, "instagram"))
+	; 	{
+	; 		p.SwitchToNextWindow()
+	; 		sleep, 2000
+	; 	}
+	; }
 	
 
-	WinClose, % "data:, - Chrome"
-	WinClose, % "Websta for Instagram"
+	; WinClose, % "data:, - Chrome"
+	; WinClose, % "Websta for Instagram"
 
-	sleep, 3000
+	;sleep, 3000
 
-	p.get("https://www.instagram.com/")
 
 
 	; sleep, 2500
@@ -493,6 +496,7 @@ fn_Web_Insta_Login(id, pw) {
 
 	ClickAndWaitForNot("#react-root > div > div > a:nth-child(2)")
 
+	
 	g_isLogin := true
 }
 
@@ -1073,8 +1077,8 @@ fn_Web_Init(isMobile := false)
 	
 	p.AddArgument("--window-size=1280,960")
 	p.AddArgument("--window-position=100,10")
-	p.AddExtension("Websta-for-Instagram_v11.5.crx")
-
+	;p.AddExtension("Websta-for-Instagram_v11.5.crx")
+	p.AddExtension("Desktop-for-Instagram_v2.4.0.crx")
 	;p.AddArgument("--incognito")
 	;p.AddArgument("--disable-extensions")
 	;p.AddArgument("--disable-popup-blocking")
@@ -1174,6 +1178,11 @@ ClickAndWaitForNot(CssForClick, CssForWait := 0, isNotAnimate := false, TimeForW
 		{
 			p.refresh() ;throw Exception(A_ThisFunc " " A_LineNumber " " CssForClick " " CssForWait)			
 			_startTime := A_TickCount
+		}
+		if(!g_isLogin && p.url = "https://www.instagram.com/#reactivated")
+		{
+			p.get("https://www.instagram.com/")
+			return
 		}
 	}
 }
