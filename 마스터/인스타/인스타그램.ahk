@@ -926,11 +926,11 @@ fn_Web_Insta_Find_Follow_Like(path, searchCnt, cnt, followRate, FollowInterval) 
 		;WaitFor("#react-root > section > main > div > div > div > div > a[href='/explore/tags/" lists[r] "/']")
 		WaitFor("#react-root > section > main > div > div > div > div > a[href*='/explore/tags/" lists[r] "/']")
 		
-		ClickAndWaitFor("#react-root > section > main > div > div > div > div > a[href*='/explore/tags/" lists[r] "/']", "#react-root > section > main > article > div:nth-of-type(3) > div > div")
+		ClickAndWaitFor("#react-root > section > main > div > div > div > div > a[href*='/explore/tags/" lists[r] "/']", "#react-root > section > main > article > div:nth-of-type(2) > div > div")
 		*/
 
 		p.Get("https://www.instagram.com/explore/tags/" lists[r] "/")
-		WaitFor("#react-root > section > main > article > div:nth-of-type(3) > div > div")
+		WaitFor("#react-root > section > main > article > div:nth-of-type(2) > div > div")
 
 		;	click and follow and like.
 		nowArticleID := fn_Web_Insta_Find_Get_nth_ArticleID(1)
@@ -940,13 +940,13 @@ fn_Web_Insta_Find_Follow_Like(path, searchCnt, cnt, followRate, FollowInterval) 
 			idx := fn_Web_Insta_Find_Get_ArticleID_Index(nowArticleID)
 			if(mod(idx - 1, 3) = 0)
 			{
-				fn_Web_HTML_ScrollToElement("#react-root > section > main > article > div:nth-of-type(3) > div > div:nth-of-type(" (idx - 1) // 3 + 1 ") > div:nth-of-type(" mod(idx - 1, 3) + 1 ") > a > div")
+				fn_Web_HTML_ScrollToElement("#react-root > section > main > article > div:nth-of-type(2) > div > div:nth-of-type(" (idx - 1) // 3 + 1 ") > div:nth-of-type(" mod(idx - 1, 3) + 1 ") > a > div")
 				sleep, 2500
 				idx := fn_Web_Insta_Find_Get_ArticleID_Index(nowArticleID)
 			}
 
-			; fn_Web_HTML_GetPos_Move("#react-root > section > main > article > div:nth-of-type(3) > div > div:nth-of-type(" (idx - 1) // 3 + 1 ") > div:nth-of-type(" mod(idx - 1, 3) + 1 ") > a > div")
-			; ClickAndWaitFor("#react-root > section > main > article > div:nth-of-type(3) > div > div:nth-of-type(" (idx - 1) // 3 + 1 ") > div:nth-of-type(" mod(idx - 1, 3) + 1 ") > a", "body > div > div > div > div > article > header > div > div > div > a", true)
+			; fn_Web_HTML_GetPos_Move("#react-root > section > main > article > div:nth-of-type(2) > div > div:nth-of-type(" (idx - 1) // 3 + 1 ") > div:nth-of-type(" mod(idx - 1, 3) + 1 ") > a > div")
+			; ClickAndWaitFor("#react-root > section > main > article > div:nth-of-type(2) > div > div:nth-of-type(" (idx - 1) // 3 + 1 ") > div:nth-of-type(" mod(idx - 1, 3) + 1 ") > a", "body > div > div > div > div > article > header > div > div > div > a", true)
 
 			;	해당 게시글로 들어감
 			p.Get(nowArticleID)
@@ -1018,7 +1018,7 @@ _fn_Util_Get_Index_Of_Object(objs, idx) {
 fn_Web_Insta_Find_Get_nth_ArticleID(nth) {
 	loop
 	{
-		ret := p.ExecuteScript("function f() { return document.querySelectorAll('#react-root > section > main > article > div:nth-of-type(3) > div > div > div > a')[" nth-1 "].href; } return f();")
+		ret := p.ExecuteScript("function f() { return document.querySelectorAll('#react-root > section > main > article > div:nth-of-type(2) > div > div > div > a')[" nth-1 "].href; } return f();")
 		if(ret)
 			break
 		fn_debug_log(A_Thisfunc " Get " nth "th ArticleID Failed. : " ret)
@@ -1031,7 +1031,7 @@ fn_Web_Insta_Find_Get_nth_ArticleID(nth) {
 fn_Web_Insta_Find_Get_ArticleID_Index(articleID) {
 	loop
 	{
-		ret := p.ExecuteScript("function f() { var a = document.querySelectorAll('#react-root > section > main > article > div:nth-of-type(3) > div > div > div > a'); for(i=0; i<a.length; ++i) { if(a[i].href == '" articleID "') return i + 1; } return -1; } return f();")
+		ret := p.ExecuteScript("function f() { var a = document.querySelectorAll('#react-root > section > main > article > div:nth-of-type(2) > div > div > div > a'); for(i=0; i<a.length; ++i) { if(a[i].href == '" articleID "') return i + 1; } return -1; } return f();")
 		if(ret)
 			break
 		fn_debug_log(A_Thisfunc " Get ArticleID Index Failed. : " ret)
@@ -1179,7 +1179,7 @@ ClickAndWaitForNot(CssForClick, CssForWait := 0, isNotAnimate := false, TimeForW
 			p.refresh() ;throw Exception(A_ThisFunc " " A_LineNumber " " CssForClick " " CssForWait)			
 			_startTime := A_TickCount
 		}
-		if(!g_isLogin && p.url = "https://www.instagram.com/#reactivated")
+		if(!g_isLogin && InStr(p.url, "#"))
 		{
 			p.get("https://www.instagram.com/")
 			return
