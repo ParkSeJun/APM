@@ -930,7 +930,34 @@ fn_Web_Insta_Find_Follow_Like(path, searchCnt, cnt, followRate, FollowInterval) 
 		*/
 
 		p.Get("https://www.instagram.com/explore/tags/" lists[r] "/")
-		WaitFor("#react-root > section > main > article > div:nth-of-type(2) > div > div")
+
+		isSuccess := false
+		_startTime := A_TickCount
+		loop
+		{
+			if(p.FindElementByCss("#react-root > section > main > article > div:nth-of-type(2) > div > div").tagName)
+			{
+				isSuccess := true
+				break
+			}
+			if(p.FindElementByCss("#react-root > section > main > article > div:nth-of-type(2) > p > a").tagName)
+				break
+			if(A_TickCount - _startTime >= g_RestartTime)
+			{
+				fn_debug_log("[REFRESH] " A_ThisFunc " LineNum " A_LineNumber)
+				p.refresh() ;throw Exception(A_ThisFunc " " CssForWait)
+				_startTime := A_TickCount
+			}
+			sleep, 100
+		}
+		
+		if(!isSuccess)
+		{
+			fn_debug_log(A_Thisfunc " 차단된 키워드 [" lists[r] "] 넘어감.") 
+			continue
+		}
+
+		;WaitFor("#react-root > section > main > article > div:nth-of-type(2) > div > div")
 
 		;	click and follow and like.
 		nowArticleID := fn_Web_Insta_Find_Get_nth_ArticleID(1)
@@ -1114,6 +1141,7 @@ ClickAndWaitForJS(CssForClick, CssForWait, isNotAnimate := false, TimeForWait :=
 		sleep, 250
 		if(A_TickCount - _startTime >= g_RestartTime)
 		{
+			fn_debug_log("[REFRESH] " A_ThisFunc " " CssForClick " " CssForWait)
 			p.refresh() ;throw Exception(A_ThisFunc " " A_LineNumber " " CssForClick " " CssForWait)
 			_startTime := A_TickCount
 		}
@@ -1145,6 +1173,7 @@ ClickAndWaitFor(CssForClick, CssForWait, isNotAnimate := false, TimeForWait := 0
 		sleep, 250
 		if(A_TickCount - _startTime >= g_RestartTime)
 		{
+			fn_debug_log("[REFRESH] " A_ThisFunc " " CssForClick " " CssForWait)
 			p.refresh() ;throw Exception(A_ThisFunc " " A_LineNumber " " CssForClick " " CssForWait)
 			_startTime := A_TickCount
 		}
@@ -1176,10 +1205,11 @@ ClickAndWaitForNot(CssForClick, CssForWait := 0, isNotAnimate := false, TimeForW
 		sleep, 250
 		if(A_TickCount - _startTime >= g_RestartTime)
 		{
+			fn_debug_log("[REFRESH] " A_ThisFunc " " CssForClick " " CssForWait)
 			p.refresh() ;throw Exception(A_ThisFunc " " A_LineNumber " " CssForClick " " CssForWait)			
 			_startTime := A_TickCount
 		}
-		if(!g_isLogin && InStr(p.url, "#"))
+		if(!g_isLogin && (InStr(p.url, "#") || InStr(p.url, "accounts")))
 		{
 			p.get("https://www.instagram.com/")
 			return
@@ -1194,6 +1224,7 @@ WaitFor(CssForWait)
 	{
 		if(A_TickCount - _startTime >= g_RestartTime)
 		{
+			fn_debug_log("[REFRESH] " A_ThisFunc " " CssForWait)
 			p.refresh() ;throw Exception(A_ThisFunc " " CssForWait)
 			_startTime := A_TickCount
 		}
