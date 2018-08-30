@@ -27,7 +27,7 @@ if(g_isDebug)
 SplashTextOn, 60, 0, 초기화 중
 fn_Gui_Make_Main()
 SplashTextOff
-
+fn_debug_log("Program Start")
 return
 
 f1::pause
@@ -931,6 +931,8 @@ fn_Web_Insta_Find_Follow_Like(path, searchCnt, cnt, followRate, FollowInterval) 
 
 		p.Get("https://www.instagram.com/explore/tags/" lists[r] "/")
 
+		fn_debug_log(A_ThisFunc " 페이지 이동 완료." lists[r] )
+
 		isSuccess := false
 		_startTime := A_TickCount
 		loop
@@ -957,25 +959,28 @@ fn_Web_Insta_Find_Follow_Like(path, searchCnt, cnt, followRate, FollowInterval) 
 			continue
 		}
 
+		fn_debug_log(A_ThisFunc " 페이지 이동 대기 완료.")
+
+		;	스크롤
+		fn_Web_HTML_ScrollToElement("#react-root > section > main > article > div:nth-of-type(2) > div > div:nth-of-type(1) > div:nth-of-type(1) > a > div")
+		sleep, 2500
 		;WaitFor("#react-root > section > main > article > div:nth-of-type(2) > div > div")
 
 		;	click and follow and like.
+		fn_debug_log("fn_Web_Insta_Find_Get_nth_ArticleID Try Now ArticleId := ... 1")
 		nowArticleID := fn_Web_Insta_Find_Get_nth_ArticleID(1)
+		fn_debug_log("Received ArticleId : " nowArticleID)
 		loop, % cnt	; for articles
 		{
-
+			fn_debug_log("fn_Web_Insta_Find_Get_ArticleID_Index Try Now  : " nowArticleID)
 			idx := fn_Web_Insta_Find_Get_ArticleID_Index(nowArticleID)
-			if(mod(idx - 1, 3) = 0)
-			{
-				fn_Web_HTML_ScrollToElement("#react-root > section > main > article > div:nth-of-type(2) > div > div:nth-of-type(" (idx - 1) // 3 + 1 ") > div:nth-of-type(" mod(idx - 1, 3) + 1 ") > a > div")
-				sleep, 2500
-				idx := fn_Web_Insta_Find_Get_ArticleID_Index(nowArticleID)
-			}
+			fn_debug_log("Received index : " idx)
 
 			; fn_Web_HTML_GetPos_Move("#react-root > section > main > article > div:nth-of-type(2) > div > div:nth-of-type(" (idx - 1) // 3 + 1 ") > div:nth-of-type(" mod(idx - 1, 3) + 1 ") > a > div")
 			; ClickAndWaitFor("#react-root > section > main > article > div:nth-of-type(2) > div > div:nth-of-type(" (idx - 1) // 3 + 1 ") > div:nth-of-type(" mod(idx - 1, 3) + 1 ") > a", "body > div > div > div > div > article > header > div > div > div > a", true)
 
 			;	해당 게시글로 들어감
+			fn_debug_log("Get : " nowArticleID)
 			p.Get(nowArticleID)
 
 			sleep, 1500
@@ -983,12 +988,14 @@ fn_Web_Insta_Find_Follow_Like(path, searchCnt, cnt, followRate, FollowInterval) 
 			; Like
 			;fn_Web_HTML_GetPos_Move("body > div > div > div > div > article > div > section button:nth-of-type(1)")
 			;ClickAndWaitFor("body > div > div > div > div > article > div > section button:nth-of-type(1)", "body > div > div > div > div > article > div > section button:nth-of-type(1) [class*='filled']", true)
+			fn_debug_log("Try to Like.")
 			ClickAndWaitFor("article button.coreSpriteHeartOpen", "article button.coreSpriteHeartOpen [class*='filled']")
+			fn_debug_log("Success.")
 			; Follow
 			; Get Rate.
 			if(getRandom(1, 100) <= followRate)
 			{
-				
+				fn_debug_log("Try to Follow. follow text : [" fn_web_HTML_GetText("article header button") "]" )				
 				if(fn_web_HTML_GetText("article header button") = "팔로우")
 				{
 					_lastClickTime := 0
@@ -997,6 +1004,7 @@ fn_Web_Insta_Find_Follow_Like(path, searchCnt, cnt, followRate, FollowInterval) 
 					{
 						if(A_TickCount - _lastClickTime >= 10000)
 						{
+							fn_debug_log("Trying to Follow yet. follow text : [" fn_web_HTML_GetText("article header button") "]" )	
 							;fn_Web_HTML_GetPos_Move("body > div > div > div > div > article > header > div > div > div button")
 							;p.FindElementByCss("body > div > div > div > div > article > header > div > div > div button:not([disabled])").click()
 							p.FindElementByCss("article header button").click()
@@ -1014,6 +1022,9 @@ fn_Web_Insta_Find_Follow_Like(path, searchCnt, cnt, followRate, FollowInterval) 
 				else
 					fn_debug_log("팔로우 못 찾음. [" fn_web_HTML_GetText("article header button") "]")
 			}
+			else
+				fn_debug_log("Skip Follow.")
+				
 
 			;if(p.FindElementByCss("body > div:not([id=oinkandstuff]) > div > button").tagName)
 			;	ClickAndWaitForNot("body > div:not([id=oinkandstuff]) > div > button", 0, true)
@@ -1021,7 +1032,44 @@ fn_Web_Insta_Find_Follow_Like(path, searchCnt, cnt, followRate, FollowInterval) 
 			;	p.Back()
 			p.Get("https://www.instagram.com/explore/tags/" lists[r] "/")
 
-			sleep, 2500
+			fn_debug_log(A_ThisFunc " 페이지 복귀 완료." lists[r] )
+
+			isSuccess := false
+			_startTime := A_TickCount
+			loop
+			{
+				if(p.FindElementByCss("#react-root > section > main > article > div:nth-of-type(2) > div > div").tagName)
+				{
+					isSuccess := true
+					break
+				}
+				if(p.FindElementByCss("#react-root > section > main > article > div:nth-of-type(2) > p > a").tagName)
+					break
+				if(A_TickCount - _startTime >= g_RestartTime)
+				{
+					fn_debug_log("[REFRESH] " A_ThisFunc " LineNum " A_LineNumber)
+					p.refresh() ;throw Exception(A_ThisFunc " " CssForWait)
+					_startTime := A_TickCount
+				}
+				sleep, 100
+			}
+			
+			if(!isSuccess)
+			{
+				fn_debug_log(A_Thisfunc " 차단된 키워드 [" lists[r] "] 넘어감.") 
+				continue
+			}
+
+			fn_debug_log(A_ThisFunc " 페이지 복귀 대기 완료.")
+
+
+			fn_debug_log("스크롤 시작")
+			loop, % (idx + 1) // 3 + 1
+			{
+				fn_Web_HTML_ScrollToElement("#react-root > section > main > article > div:nth-of-type(2) > div > div:nth-of-type(" A_Index ") > div:nth-of-type(1) > a > div")
+				sleep, 2500
+				fn_debug_log("fn_Web_Insta_Find_Get_ArticleID_Index Try Now For Scroll  : " nowArticleID)
+			}
 
 			nowArticleID := fn_Web_Insta_Find_Get_nth_ArticleID(idx + 1)
 
