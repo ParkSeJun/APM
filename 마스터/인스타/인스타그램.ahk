@@ -1007,6 +1007,7 @@ fn_Web_Insta_Find_Follow_Like(path, searchCnt, cnt, followRate, FollowInterval) 
 							fn_debug_log("Trying to Follow yet. follow text : [" fn_web_HTML_GetText("article header button") "]" )	
 							;fn_Web_HTML_GetPos_Move("body > div > div > div > div > article > header > div > div > div button")
 							;p.FindElementByCss("body > div > div > div > div > article > header > div > div > div button:not([disabled])").click()
+							fn_Web_HTML_ScrollToElement("article header button")
 							p.FindElementByCss("article header button").click()
 							
 							_lastClickTime := A_TickCount
@@ -1063,6 +1064,10 @@ fn_Web_Insta_Find_Follow_Like(path, searchCnt, cnt, followRate, FollowInterval) 
 			fn_debug_log(A_ThisFunc " 페이지 복귀 대기 완료.")
 
 
+			g_lastFollowTime := A_TickCount
+			while(A_TickCount - g_lastFollowTime < FollowInterval * 1000)
+				sleep, 250
+
 			fn_debug_log("스크롤 시작")
 			loop, % (idx + 1) // 3 + 1
 			{
@@ -1072,10 +1077,6 @@ fn_Web_Insta_Find_Follow_Like(path, searchCnt, cnt, followRate, FollowInterval) 
 			}
 
 			nowArticleID := fn_Web_Insta_Find_Get_nth_ArticleID(idx + 1)
-
-			g_lastFollowTime := A_TickCount
-			while(A_TickCount - g_lastFollowTime < FollowInterval * 1000)
-				sleep, 250
 		}
 
 	}
