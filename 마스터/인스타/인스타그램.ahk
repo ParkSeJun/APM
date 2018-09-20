@@ -173,9 +173,9 @@ fn_Gui_Make_Main() {
 	Gui, Add, Text, xs+20 ys+60, 사진 폴더
 	Gui, Add, Edit, x+5 yp-4 w405 vGui_Edit_Upload_Image_Path gfn_Gui_Event_Gui_Save
 	Gui, Add, Button, x+5 yp-1 w30 vGui_Button_Upload_Image_Path gfn_Gui_Event_Select_Path, ...
-	Gui, Add, Text, xs+20 ys+90, 문구 파일
-	Gui, Add, Edit, x+5 yp-4 w405 vGui_Edit_Upload_Article_Path gfn_Gui_Event_Gui_Save
-	Gui, Add, Button, x+5 yp-1 w30 vGui_Button_Upload_Article_Path gfn_Gui_Event_Select_Path, ...
+	Gui, Add, Text, xs+20 ys+90, 글감 폴더
+	Gui, Add, Edit, x+5 yp-4 w405 vGui_Edit_Upload_Article_Path2 gfn_Gui_Event_Gui_Save
+	Gui, Add, Button, x+5 yp-1 w30 vGui_Button_Upload_Article_Path2 gfn_Gui_Event_Select_Path, ...
 	Gui, Add, Text, xs+20 ys+120, 해쉬태그 파일
 	Gui, Add, Edit, x+5 yp-4 w405 vGui_Edit_Upload_Tag_Path gfn_Gui_Event_Gui_Save
 	Gui, Add, Button, x+5 yp-1 w30 vGui_Button_Upload_Tag_Path gfn_Gui_Event_Select_Path, ...
@@ -189,7 +189,7 @@ fn_Gui_Make_Main() {
 	Gui, Add, Text, x+5 yp+4, 초
 	Gui, Add, Button, xs+570 ys+25 w205 h180 gfn_Gui_Event_Button_Process vGui_Button_Upload, 피드 올리기 시작
 	g_GuiVars.Push("Gui_Edit_Upload_Image_Path")
-	g_GuiVars.Push("Gui_Edit_Upload_Article_Path")
+	g_GuiVars.Push("Gui_Edit_Upload_Article_Path2")
 	g_GuiVars.Push("Gui_Edit_Upload_Tag_Path")
 	g_GuiVars.Push("Gui_Edit_Upload_Tag_Count_Min")
 	g_GuiVars.Push("Gui_Edit_Upload_Tag_Count_Max")
@@ -260,8 +260,16 @@ fn_Gui_Event_Button_Process(hwnd, event, info, err := "") {
 					o.Push(A_LoopFileLongPath)
 				imagePath := o[getRandom(o.MinIndex(), o.MaxIndex())]
 
-				o := fn_File_Read_To_Object(Gui_Edit_Upload_Article_Path)
-				str := o[getRandom(o.MinIndex(), o.MaxIndex())]
+
+
+
+				;o := fn_File_Read_To_Object(Gui_Edit_Upload_Article_Path2)
+				;str := o[getRandom(o.MinIndex(), o.MaxIndex())]
+				l := []
+				loop, files, % A_ScriptDir "\" Gui_Edit_Upload_Article_Path2 "\*.txt"
+					l.Push(A_LoopFileFullPath)
+				FileRead, str, % l[getRandom(1, l.MaxIndex())]
+				l := 0
 
 				str .= "`n"
 				r := getRandom(Gui_Edit_Upload_Tag_Count_Min, Gui_Edit_Upload_Tag_Count_Max)
@@ -361,7 +369,7 @@ fn_Gui_Event_Select_Path(hwnd, event, info, err := "") {
 	GuiControlGet, name, Name, % hwnd
 
 	;	FileSelectFile
-	for i, e in ["UnFollow_Path", "Follow_Like_Path", "Upload_Article_Path", "Upload_Tag_Path"]
+	for i, e in ["UnFollow_Path", "Follow_Like_Path", "Upload_Tag_Path"]
 	{
 		if(InStr(name, e))
 		{
@@ -378,7 +386,7 @@ fn_Gui_Event_Select_Path(hwnd, event, info, err := "") {
 	}
 
 	;	FileSelectFolder
-	for i, e in ["Get_List_Path_Following", "Get_List_Path_UnFollow", "Upload_Image_Path"]
+	for i, e in ["Get_List_Path_Following", "Get_List_Path_UnFollow", "Upload_Article_Path2", "Upload_Image_Path"]
 	{
 		if(InStr(name, e))
 		{
@@ -597,16 +605,16 @@ fn_Web_Insta_Get_List_Following(folderPath, idx := 3) {
 
 	sleep, 1000
 
-	ClickAndWaitFor("#react-root > section > main section > ul > li:nth-of-type(" idx ") > a", "body > div > div > div > div > div > ul > div > li")
+	ClickAndWaitFor("#react-root > section > main section > ul > li:nth-of-type(" idx ") > a", "body > div > div > div > div > ul > div > li")
 
 	loop
 	{
-		allPageHeight := p.ExecuteScript("function a(){ return document.querySelector('body > div > div > div > div > div:nth-of-type(2)').scrollHeight; } return a();")
-		p.ExecuteScript("document.querySelector('body > div > div > div > div > div:nth-of-type(2)').scrollBy(0, 999999999);")
+		allPageHeight := p.ExecuteScript("function a(){ return document.querySelector('body > div > div > div > div:nth-of-type(2)').scrollHeight; } return a();")
+		p.ExecuteScript("document.querySelector('body > div > div > div > div:nth-of-type(2)').scrollBy(0, 999999999);")
 		_measureStartTime := A_TickCount
 		loop
 		{
-			_allPageHeight := p.ExecuteScript("function a(){ return document.querySelector('body > div > div > div > div > div:nth-of-type(2)').scrollHeight; } return a();")
+			_allPageHeight := p.ExecuteScript("function a(){ return document.querySelector('body > div > div > div > div:nth-of-type(2)').scrollHeight; } return a();")
 			if(allPageHeight <> _allPageHeight)
 				break
 			if(A_TickCount - _measureStartTime >= 15000)
@@ -616,10 +624,10 @@ fn_Web_Insta_Get_List_Following(folderPath, idx := 3) {
 	}
 	;msgbox, 페이지의 끝에 도달
 	lists := []
-	cnt := p.FindElementsByCss("body > div > div > div > div > div > ul > div > li").Count
+	cnt := p.FindElementsByCss("body > div > div > div > div > ul > div > li").Count
 	loop,% cnt
 	{
-		name := p.ExecuteScript("function f() { return document.querySelector('body > div > div > div > div > div > ul > div > li:nth-of-type(" A_Index ") a[title]').title; } return f();")
+		name := p.ExecuteScript("function f() { return document.querySelector('body > div > div > div > div > ul > div > li:nth-of-type(" A_Index ") a[title]').title; } return f();")
 		if(!name)
 			continue
 		lists.Push(name)
@@ -711,21 +719,21 @@ fn_Web_Insta_UnFollow(filePath, interval) {
 			_lastClickTime := 0
 			loop
 			{
-				str := p.ExecuteScript("function f() { return document.querySelector('body > div > div > div > div > div > ul > div > li [title=""" e """]').parentNode.parentNode.parentNode.parentNode.parentNode.querySelector('button:not([disabled])').innerText; } return f();")
+				str := p.ExecuteScript("function f() { return document.querySelector('body > div > div > div > div > ul > div > li [title=""" e """]').parentNode.parentNode.parentNode.parentNode.parentNode.querySelector('button:not([disabled])').innerText; } return f();")
 				if(str = "팔로우")
 					break
 				if(!str)
 				{
-					dbg1 := p.ExecuteScript("function f() { return document.querySelector('body > div > div > div > div > div > ul > div > li [title=""" e """]').parentNode.parentNode.parentNode.parentNode.parentNode.querySelector('button:not([disabled])').tagName; } return f();")
-					dbg2 := p.ExecuteScript("function f() { return document.querySelector('body > div > div > div > div > div > ul > div > li [title=""" e """]').parentNode.parentNode.parentNode.parentNode.parentNode.querySelector('button').tagName; } return f();")
-					dbg3 := p.ExecuteScript("function f() { return document.querySelector('body > div > div > div > div > div > ul > div > li [title=""" e """]').tagName; } return f();")
+					dbg1 := p.ExecuteScript("function f() { return document.querySelector('body > div > div > div > div > ul > div > li [title=""" e """]').parentNode.parentNode.parentNode.parentNode.parentNode.querySelector('button:not([disabled])').tagName; } return f();")
+					dbg2 := p.ExecuteScript("function f() { return document.querySelector('body > div > div > div > div > ul > div > li [title=""" e """]').parentNode.parentNode.parentNode.parentNode.parentNode.querySelector('button').tagName; } return f();")
+					dbg3 := p.ExecuteScript("function f() { return document.querySelector('body > div > div > div > div > ul > div > li [title=""" e """]').tagName; } return f();")
 					FileAppend, % "★★" dbg1 "☆" dbg2 "☆" dbg3 "☆" str "☆`n", % today "_결과.txt"
 					break
 				}
 				if(A_TickCount - _lastClickTime >= 15000)
 				{
 					FileAppend, % str "`n", % today "_결과.txt"
-					p.ExecuteScript("document.querySelector('body > div > div > div > div > div > ul > div > li [title=""" e """]').parentNode.parentNode.parentNode.parentNode.parentNode.querySelector('button:not([disabled])').click();")
+					p.ExecuteScript("document.querySelector('body > div > div > div > div > ul > div > li [title=""" e """]').parentNode.parentNode.parentNode.parentNode.parentNode.querySelector('button:not([disabled])').click();")
 					_lastClickTime := A_TickCount
 				}
 				sleep, 250
@@ -984,13 +992,15 @@ fn_Web_Insta_Find_Follow_Like(path, searchCnt, cnt, followRate, FollowInterval) 
 			p.Get(nowArticleID)
 
 			sleep, 1500
+
+			;	에러 페이지 체크
+			if(p.FindElementByCss(".error-container").tagName)
+			{
+				fn_debug_log("Error Page! Back to list.")
+				continue
+			}
 			
-			; Like
-			;fn_Web_HTML_GetPos_Move("body > div > div > div > div > article > div > section button:nth-of-type(1)")
-			;ClickAndWaitFor("body > div > div > div > div > article > div > section button:nth-of-type(1)", "body > div > div > div > div > article > div > section button:nth-of-type(1) [class*='filled']", true)
-			fn_debug_log("Try to Like.")
-			ClickAndWaitFor("article button.coreSpriteHeartOpen", "article button.coreSpriteHeartOpen [class*='filled']")
-			fn_debug_log("Success.")
+			
 			; Follow
 			; Get Rate.
 			if(getRandom(1, 100) <= followRate)
@@ -1025,6 +1035,14 @@ fn_Web_Insta_Find_Follow_Like(path, searchCnt, cnt, followRate, FollowInterval) 
 			}
 			else
 				fn_debug_log("Skip Follow.")
+
+			; Like
+			;fn_Web_HTML_GetPos_Move("body > div > div > div > div > article > div > section button:nth-of-type(1)")
+			;ClickAndWaitFor("body > div > div > div > div > article > div > section button:nth-of-type(1)", "body > div > div > div > div > article > div > section button:nth-of-type(1) [class*='filled']", true)
+			fn_debug_log("Try to Like.")
+			fn_Web_HTML_ScrollToElement("article button.coreSpriteHeartOpen", "article button.coreSpriteHeartOpen [class*='filled']")
+			ClickAndWaitFor("article button.coreSpriteHeartOpen", "article button.coreSpriteHeartOpen [class*='filled']")
+			fn_debug_log("Success.")
 				
 
 			;if(p.FindElementByCss("body > div:not([id=oinkandstuff]) > div > button").tagName)
