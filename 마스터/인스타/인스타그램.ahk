@@ -491,10 +491,17 @@ fn_Web_Insta_Login(id, pw) {
 		ClickAndWaitFor("#react-root > section > main > article > div > div:nth-child(2) > p > a", "#react-root > section > main article > div > div:nth-child(1) > div > form > a")
 	else
 		ClickAndWaitFor("#react-root > section > main > article > div > div > div > span > button", "[name='username']")
+	
+	sleep, 2500
 
 	fn_Web_HTML_GetPos_Move("[name='username']")
 	p.FindElementByCss("[name='username']").click()
 	SlowSendKeys("[name='username']", id)
+	while(p.FindElementByCss("[name='username']").value != id)
+	{
+		p.FindElementByCss("[name='username']").clear()
+		SlowSendKeys("[name='username']", id)		
+	}
 
 	fn_Web_HTML_GetPos_Move("[name='password']")
 	p.FindElementByCss("[name='password']").click()
@@ -503,6 +510,7 @@ fn_Web_Insta_Login(id, pw) {
 	ClickAndWaitForNot("#react-root > section > main article > div > div > div > form > span > button")
 
 	ClickAndWaitForNot("#react-root > div > div > a:nth-child(2)")
+
 
 	
 	g_isLogin := true
@@ -596,7 +604,7 @@ fn_Web_Insta_Delete_Article(cnt) {
 fn_Web_Insta_Get_List_Following(folderPath, idx := 3) {
 
 	if(idx = 2)
-		ClickAndWaitForNot("body > div:not([id=oinkandstuff]) > div > button")
+		ClickAndWaitForNot("body > div > div > div > div > div > button") ; 닫기버튼
 	else
 	{
 		fn_Web_HTML_GetPos_Move("#react-root > section > nav > div > div > div > div > div > div:nth-child(5) > a")
@@ -632,7 +640,7 @@ fn_Web_Insta_Get_List_Following(folderPath, idx := 3) {
 			continue
 		lists.Push(name)
 	}
-
+	
 	if(folderPath)
 	{
 		today := A_Now
@@ -1276,8 +1284,11 @@ ClickAndWaitForNot(CssForClick, CssForWait := 0, isNotAnimate := false, TimeForW
 			p.refresh() ;throw Exception(A_ThisFunc " " A_LineNumber " " CssForClick " " CssForWait)			
 			_startTime := A_TickCount
 		}
-		if(!g_isLogin && (InStr(p.url, "#") || InStr(p.url, "accounts")))
+		if(!g_isLogin && (InStr(p.url, "#") || InStr(p.url, "onetap")))
 		{
+			; https://www.instagram.com/accounts/login/ 제외.
+
+			;msgbox,% p.url
 			p.get("https://www.instagram.com/")
 			return
 		}
