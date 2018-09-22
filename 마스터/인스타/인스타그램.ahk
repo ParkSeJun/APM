@@ -511,7 +511,8 @@ fn_Web_Insta_Login(id, pw) {
 
 	ClickAndWaitForNot("#react-root > div > div > a:nth-child(2)")
 
-
+	if(!g_isLogin && (InStr(p.url, "#") || InStr(p.url, "onetap")))
+		p.get("https://www.instagram.com/")
 	
 	g_isLogin := true
 }
@@ -738,10 +739,17 @@ fn_Web_Insta_UnFollow(filePath, interval) {
 					FileAppend, % "★★" dbg1 "☆" dbg2 "☆" dbg3 "☆" str "☆`n", % today "_결과.txt"
 					break
 				}
+
+				
 				if(A_TickCount - _lastClickTime >= 15000)
 				{
-					FileAppend, % str "`n", % today "_결과.txt"
-					p.ExecuteScript("document.querySelector('body > div > div > div > div > ul > div > li [title=""" e """]').parentNode.parentNode.parentNode.parentNode.parentNode.querySelector('button:not([disabled])').click();")
+					FileAppend, % str "-" e "클릭`n", % today "_결과.txt"
+					while(!p.FindElementByCss("body > div > div > div > div > div:nth-of-type(3) > button:nth-of-type(1)").tagName)
+					{
+						p.ExecuteScript("document.querySelector('body > div > div > div > div > ul > div > li [title=""" e """]').parentNode.parentNode.parentNode.parentNode.parentNode.querySelector('button:not([disabled])').click();")
+						sleep, 1000
+					}
+					p.FindElementByCss("body > div > div > div > div > div:nth-of-type(3) > button:nth-of-type(1)").Click()
 					_lastClickTime := A_TickCount
 				}
 				sleep, 250
@@ -903,8 +911,11 @@ fn_Web_Insta_Find_Follow_Like(path, searchCnt, cnt, followRate, FollowInterval) 
 		;	search
 		if(lists.MaxIndex() <= usedTags.MaxIndex())
 		{
-			msgbox, % "팔로우 좋아요 작업의 태그 " lists.MaxIndex() "개를 모두 사용했습니다.`n작업을 완료합니다."
-			return
+			;	태그 다 쓰면 유즈드를 초기화 하는 걸로 변경.
+			;msgbox, % "팔로우 좋아요 작업의 태그 " lists.MaxIndex() "개를 모두 사용했습니다.`n작업을 완료합니다."
+			;return
+			fn_debug_log(A_ThisFunc " " searchCnt "개의 태그 모두 사용. 사용한 태그 목록 초기화.")
+			usedTags := []
 		}
 
 		loop
