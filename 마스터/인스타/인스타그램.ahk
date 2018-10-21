@@ -465,17 +465,17 @@ fn_Web_Insta_Login(id, pw) {
 
 	if(g_isDebug)
 	{
-		while(!fn_Debug_Fast_Get_TagName("#react-root > section > main > article > div > div > div > span > button") && !fn_Debug_Fast_Get_TagName("[name='username']"))
+		while(!fn_Debug_Fast_Get_TagName("#react-root > section > main > article > div > div > div > div > button") && !fn_Debug_Fast_Get_TagName("[name='username']"))
 			sleep, 150
 		if(fn_Debug_Fast_Get_TagName("[name='emailOrPhone']"))
 			fn_Debug_Fast_ClickAndWaitFor("#react-root > section > main > article > div > div:nth-child(2) > p > a", "#react-root > section > main > article > div > div:nth-child(1) > div > form > a")
 		else
-			fn_Debug_Fast_ClickAndWaitFor("#react-root > section > main > article > div > div > div > span > button", "[name='username']")
+			fn_Debug_Fast_ClickAndWaitFor("#react-root > section > main > article > div > div > div > div > button", "[name='username']")
 
 		p.FindElementByCss("[name='username']").sendkeys(id)
 		p.FindElementByCss("[name='password']").sendkeys(pw)
 
-		fn_Debug_Fast_ClickAndWaitForNot("#react-root > section > main > article > div > div > div > form > span > button")
+		fn_Debug_Fast_ClickAndWaitForNot("#react-root > section > main > article > div > div > div > form button")
 
 		fn_Debug_Fast_ClickAndWaitForNot("#react-root > div > div > a:nth-child(2)")
 		g_isLogin := true
@@ -484,13 +484,13 @@ fn_Web_Insta_Login(id, pw) {
 
 
 
-	while(!p.FindElementByCss("#react-root > section > main > article > div > div > div > span > button").tagName && !p.FindElementByCss("[name='username']").tagName)
+	while(!p.FindElementByCss("#react-root > section > main > article > div > div > div > div > button").tagName && !p.FindElementByCss("[name='username']").tagName)
 		sleep, 150
 	;	가끔 로그인 페이지가 아닌 가입 페이지가 열린다. 거기서 로그인 페이지로 이동해주는 예외 스크립트.
 	if(p.FindElementByCss("[name='emailOrPhone']").tagName)
 		ClickAndWaitFor("#react-root > section > main > article > div > div:nth-child(2) > p > a", "#react-root > section > main article > div > div:nth-child(1) > div > form > a")
 	else
-		ClickAndWaitFor("#react-root > section > main > article > div > div > div > span > button", "[name='username']")
+		ClickAndWaitFor("#react-root > section > main > article > div > div > div > div > button", "[name='username']")
 	
 	sleep, 2500
 
@@ -507,7 +507,7 @@ fn_Web_Insta_Login(id, pw) {
 	p.FindElementByCss("[name='password']").click()
 	SlowSendKeys("[name='password']", pw)
 
-	ClickAndWaitForNot("#react-root > section > main article > div > div > div > form > span > button")
+	ClickAndWaitForNot("#react-root > section > main article > div > div > div > form button[type=submit]")
 
 	ClickAndWaitForNot("#react-root > div > div > a:nth-child(2)")
 
@@ -603,7 +603,7 @@ fn_Web_Insta_Delete_Article(cnt) {
 
 
 fn_Web_Insta_Get_List_Following(folderPath, idx := 3) {
-
+	fn_debug_log(A_Thisfunc " folderPath : " folderPath " Idx : " idx)
 	if(idx = 2)
 		ClickAndWaitForNot("body > div > div > div > div > div > button") ; 닫기버튼
 	else
@@ -613,8 +613,10 @@ fn_Web_Insta_Get_List_Following(folderPath, idx := 3) {
 	}
 
 	sleep, 1000
+	fn_debug_log(A_Thisfunc " arrive my page.")
 
-	ClickAndWaitFor("#react-root > section > main section > ul > li:nth-of-type(" idx ") > a", "body > div > div > div > div > ul > div > li")
+	ClickAndWaitFor("#react-root > section > main section > ul > li:nth-of-type(" idx ") > a", "body > div > div > div > div > ul:nth-of-tpye(1) > div > li")
+	fn_debug_log(A_Thisfunc " opened list popup.")
 
 	loop
 	{
@@ -624,19 +626,26 @@ fn_Web_Insta_Get_List_Following(folderPath, idx := 3) {
 		loop
 		{
 			_allPageHeight := p.ExecuteScript("function a(){ return document.querySelector('body > div > div > div > div:nth-of-type(2)').scrollHeight; } return a();")
+			fn_debug_log(A_Thisfunc " Scrolling : " allPageHeight " " _allPageHeight)
 			if(allPageHeight <> _allPageHeight)
 				break
 			if(A_TickCount - _measureStartTime >= 15000)
+			{
+				fn_debug_log(A_Thisfunc " Scrolling : 15s over. break double.")
 				break, 2
+			}
 		}
 		sleep, 5000
 	}
+	fn_debug_log(A_Thisfunc " Scroll complete.")
 	;msgbox, 페이지의 끝에 도달
 	lists := []
-	cnt := p.FindElementsByCss("body > div > div > div > div > ul > div > li").Count
+	cnt := p.FindElementsByCss("body > div > div > div > div > ul:nth-of-tpye(1) > div > li").Count
+	fn_debug_log(A_Thisfunc " list cnt : " cnt)
 	loop,% cnt
 	{
-		name := p.ExecuteScript("function f() { return document.querySelector('body > div > div > div > div > ul > div > li:nth-of-type(" A_Index ") a[title]').title; } return f();")
+		name := p.ExecuteScript("function f() { return document.querySelector('body > div > div > div > div > ul:nth-of-tpye(1) > div > li:nth-of-type(" A_Index ") a[title]').title; } return f();")
+		fn_debug_log(A_Thisfunc " pushed name : " name)
 		if(!name)
 			continue
 		lists.Push(name)
@@ -728,14 +737,14 @@ fn_Web_Insta_UnFollow(filePath, interval) {
 			_lastClickTime := 0
 			loop
 			{
-				str := p.ExecuteScript("function f() { return document.querySelector('body > div > div > div > div > ul > div > li [title=""" e """]').parentNode.parentNode.parentNode.parentNode.parentNode.querySelector('button:not([disabled])').innerText; } return f();")
+				str := p.ExecuteScript("function f() { return document.querySelector('body > div > div > div > div > ul:nth-of-tpye(1) > div > li [title=""" e """]').parentNode.parentNode.parentNode.parentNode.parentNode.querySelector('button:not([disabled])').innerText; } return f();")
 				if(str = "팔로우")
 					break
 				if(!str)
 				{
-					dbg1 := p.ExecuteScript("function f() { return document.querySelector('body > div > div > div > div > ul > div > li [title=""" e """]').parentNode.parentNode.parentNode.parentNode.parentNode.querySelector('button:not([disabled])').tagName; } return f();")
-					dbg2 := p.ExecuteScript("function f() { return document.querySelector('body > div > div > div > div > ul > div > li [title=""" e """]').parentNode.parentNode.parentNode.parentNode.parentNode.querySelector('button').tagName; } return f();")
-					dbg3 := p.ExecuteScript("function f() { return document.querySelector('body > div > div > div > div > ul > div > li [title=""" e """]').tagName; } return f();")
+					dbg1 := p.ExecuteScript("function f() { return document.querySelector('body > div > div > div > div > ul:nth-of-tpye(1) > div > li [title=""" e """]').parentNode.parentNode.parentNode.parentNode.parentNode.querySelector('button:not([disabled])').tagName; } return f();")
+					dbg2 := p.ExecuteScript("function f() { return document.querySelector('body > div > div > div > div > ul:nth-of-tpye(1) > div > li [title=""" e """]').parentNode.parentNode.parentNode.parentNode.parentNode.querySelector('button').tagName; } return f();")
+					dbg3 := p.ExecuteScript("function f() { return document.querySelector('body > div > div > div > div > ul:nth-of-tpye(1) > div > li [title=""" e """]').tagName; } return f();")
 					FileAppend, % "★★" dbg1 "☆" dbg2 "☆" dbg3 "☆" str "☆`n", % today "_결과.txt"
 					break
 				}
@@ -746,7 +755,7 @@ fn_Web_Insta_UnFollow(filePath, interval) {
 					FileAppend, % str "-" e "클릭`n", % today "_결과.txt"
 					while(!p.FindElementByCss("body > div > div > div > div > div:nth-of-type(3) > button:nth-of-type(1)").tagName)
 					{
-						p.ExecuteScript("document.querySelector('body > div > div > div > div > ul > div > li [title=""" e """]').parentNode.parentNode.parentNode.parentNode.parentNode.querySelector('button:not([disabled])').click();")
+						p.ExecuteScript("document.querySelector('body > div > div > div > div > ul:nth-of-tpye(1) > div > li [title=""" e """]').parentNode.parentNode.parentNode.parentNode.parentNode.querySelector('button:not([disabled])').click();")
 						sleep, 1000
 					}
 					p.FindElementByCss("body > div > div > div > div > div:nth-of-type(3) > button:nth-of-type(1)").Click()
@@ -1002,6 +1011,9 @@ fn_Web_Insta_Find_Follow_Like(path, searchCnt, cnt, followRate, FollowInterval) 
 			fn_debug_log("fn_Web_Insta_Find_Get_ArticleID_Index Try Now  : " nowArticleID)
 			idx := fn_Web_Insta_Find_Get_ArticleID_Index(nowArticleID)
 			fn_debug_log("Received index : " idx)
+
+			if(!idx)
+				break
 
 			; fn_Web_HTML_GetPos_Move("#react-root > section > main > article > div:nth-of-type(2) > div > div:nth-of-type(" (idx - 1) // 3 + 1 ") > div:nth-of-type(" mod(idx - 1, 3) + 1 ") > a > div")
 			; ClickAndWaitFor("#react-root > section > main > article > div:nth-of-type(2) > div > div:nth-of-type(" (idx - 1) // 3 + 1 ") > div:nth-of-type(" mod(idx - 1, 3) + 1 ") > a", "body > div > div > div > div > article > header > div > div > div > a", true)
@@ -1263,6 +1275,7 @@ ClickAndWaitFor(CssForClick, CssForWait, isNotAnimate := false, TimeForWait := 0
 			p.refresh() ;throw Exception(A_ThisFunc " " A_LineNumber " " CssForClick " " CssForWait)
 			_startTime := A_TickCount
 		}
+		p.FindElementByCss("[role=dialog]:not(.inb-photo-ctn) button:nth-of-type(2)").click()
 	}
 }
 
@@ -1303,6 +1316,8 @@ ClickAndWaitForNot(CssForClick, CssForWait := 0, isNotAnimate := false, TimeForW
 			p.get("https://www.instagram.com/")
 			return
 		}
+		
+		p.FindElementByCss("[role=dialog]:not(.inb-photo-ctn) button:nth-of-type(2)").click()
 	}
 }
 
