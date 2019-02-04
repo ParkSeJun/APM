@@ -208,6 +208,19 @@ fn_Gui_Make_Main() {
 	Gui, Add, Button, xs+260 ys+20 w150 h90 gfn_Gui_Event_Button_Process vGui_Button_Delete_Article, 게시물 삭제 시작
 	g_GuiVars.Push("Gui_Edit_Delete_Article_Count")
 
+	Gui, Add, GroupBox, x440 y646 w360 h120 cBlack Section
+	Gui, Font, bold
+	Gui, Add, Text, xs+15 ys+30 cBlue, - 게시물 찾아가서 팔로우 + 좋아요
+	Gui, Font, Norm
+	Gui, Add, Text, xs+20 ys+60, 검색할 # 태그
+	Gui, Add, Edit, x+5 yp-4 w130 vGui_Edit_Find_Keyword gfn_Gui_Event_Gui_Save
+	Gui, Add, Text, xs+20 ys+90, 게시글 URL
+	Gui, Add, Edit, x+5 yp-4 w141 vGui_Edit_Find_URL gfn_Gui_Event_Gui_Save
+	Gui, Add, Button, xs+250 ys+20 w100 h90 gfn_Gui_Event_Button_Process vGui_Button_Find, 검색 시작
+	g_GuiVars.Push("Gui_Edit_Find_Keyword")
+	g_GuiVars.Push("Gui_Edit_Find_URL")
+	
+
 	Gui, Add, StatusBar
 	SB_SetText("`tF1 : 일시정지                    F2 : 프로그램 재실행                    F3 : 종료")
 
@@ -232,8 +245,9 @@ fn_Gui_Event_Button_Process(hwnd, event, info, err := "") {
 	GuiControl, +Disabled, Gui_Button_Get_List_UnFollow
 	GuiControl, +Disabled, Gui_Button_UnFollow
 	GuiControl, +Disabled, Gui_Button_Delete_Article
+	GuiControl, +Disabled, Gui_Button_Find
 
-	if(Gui_CheckBox_IDPW)
+	if(name = "Gui_Button_Find")
 	{
 		IDPWObject := []
 		FileRead, IDList, IDPW.txt
@@ -247,23 +261,26 @@ fn_Gui_Event_Button_Process(hwnd, event, info, err := "") {
 		}
 
 		usedID := []
-
 		if(IDPWObject.Length() = 0)
-			msgbox, IDPW.txt 파일에 입력된 아이디 정보가 없습니다.
+			msgbox, IDPW.txt 파일에 입력된 아이디 정보가 없습니다.`n설정된 계정으로 로그인합니다.
 	}
 	
 	loop
 	{
-		if(!g_isLogin || Gui_CheckBox_IDPW)
+		if(!g_isLogin)
 		{
 			loop
 			{
 				try
 				{
-					if(Gui_CheckBox_IDPW)
+					if(name = "Gui_Button_Find" && IDPWObject.Length() > 0)
 					{
 						if(usedID.MaxIndex() >= IDPWObject.MaxIndex())
-							usedID := []
+						{
+							;if(name = "Gui_Button_Find")
+							break, 2
+							;usedID := []
+						}
 						loop
 						{
 							r := getRandom(1, IDPWObject.MaxIndex())
@@ -278,8 +295,9 @@ fn_Gui_Event_Button_Process(hwnd, event, info, err := "") {
 								}
 							}
 							if(!isDup)
-							break
+								break
 						}
+						usedID.Push(IDPWObject[r]["ID"])
 						fn_Web_Insta_Login(IDPWObject[r]["ID"], IDPWObject[r]["PW"])
 					}
 					else
@@ -301,9 +319,6 @@ fn_Gui_Event_Button_Process(hwnd, event, info, err := "") {
 				loop, % Gui_Edit_Upload_Image_Path "\*"
 					o.Push(A_LoopFileLongPath)
 				imagePath := o[getRandom(o.MinIndex(), o.MaxIndex())]
-
-
-
 
 				;o := fn_File_Read_To_Object(Gui_Edit_Upload_Article_Path2)
 				;str := o[getRandom(o.MinIndex(), o.MaxIndex())]
@@ -351,7 +366,6 @@ fn_Gui_Event_Button_Process(hwnd, event, info, err := "") {
 			}
 			else if(name = "Gui_Button_Feed_Like")
 			{
-				
 				fn_debug_log(name " " Gui_Edit_Feed_Like_Count " " Gui_Edit_Feed_Like_Interval)
 				fn_Web_Insta_Feed_Like(Gui_Edit_Feed_Like_Count, Gui_Edit_Feed_Like_Interval)
 			}
@@ -381,6 +395,13 @@ fn_Gui_Event_Button_Process(hwnd, event, info, err := "") {
 				fn_debug_log(name " " Gui_Edit_Delete_Article_Count)
 				fn_Web_Insta_Delete_Article(Gui_Edit_Delete_Article_Count)
 			}
+			else if(name = "Gui_Button_Find")
+			{
+				fn_debug_log(name " " Gui_Edit_Find_Keyword " " Gui_Edit_Find_URL)
+				fn_Web_Insta_Find(Gui_Edit_Find_Keyword, Gui_Edit_Find_URL)
+				if(IDPWObject.Length() > 0)
+					continue
+			}
 			break
 		}
 		catch e
@@ -398,6 +419,7 @@ fn_Gui_Event_Button_Process(hwnd, event, info, err := "") {
 	GuiControl, -Disabled, Gui_Button_Get_List_UnFollow
 	GuiControl, -Disabled, Gui_Button_UnFollow
 	GuiControl, -Disabled, Gui_Button_Delete_Article
+	GuiControl, -Disabled, Gui_Button_Find
 }
 
 GuiClose:
@@ -557,6 +579,120 @@ fn_Web_Insta_Login(id, pw) {
 		p.get("https://www.instagram.com/")
 	
 	g_isLogin := true
+}
+
+;=====================================================================================;
+
+
+fn_Web_Insta_Find(Keyword, URL) {
+	p.Get("https://www.instagram.com/explore/")
+	p.Get("https://www.instagram.com/explore/tags/" Keyword "/")
+	fn_debug_log(A_ThisFunc " 페이지 이동 완료." Keyword )
+
+	isSuccess := false
+	_startTime := A_TickCount
+	loop
+	{
+		if(p.FindElementByCss("#react-root > section > main > article > div:nth-of-type(2) > div > div").tagName)
+		{
+			isSuccess := true
+			break
+		}
+		if(p.FindElementByCss("#react-root > section > main > article > div:nth-of-type(2) > p > a").tagName)
+			break
+		if(A_TickCount - _startTime >= g_RestartTime)
+		{
+			fn_debug_log("[REFRESH] " A_ThisFunc " LineNum " A_LineNumber)
+			p.refresh() ;throw Exception(A_ThisFunc " " CssForWait)
+			_startTime := A_TickCount
+		}
+		sleep, 100
+	}
+	
+	if(!isSuccess)
+	{
+		fn_debug_log(A_Thisfunc " 차단된 키워드...")
+		msgbox, 차단된 키워드입니다.`n%Keyword%`n`n프로그램을 재시작합니다.
+		reload
+		return
+	}
+
+	fn_debug_log(A_ThisFunc " 페이지 이동 대기 완료.")
+
+	;	스크롤
+	fn_Web_HTML_ScrollToElement("#react-root > section > main > article > div:nth-of-type(2) > div > div:nth-of-type(1) > div:nth-of-type(1) > a > div")
+	sleep, 2500
+
+
+	;	게시물 순회
+	foundIDList := []
+	foundIdx := -1
+	foundURL := ""
+	findURL := fn_Util_Get_Link_By_URL(URL)
+	loop
+	{
+		cnt := p.ExecuteScript("function a() { return document.querySelectorAll(""#react-root > section > main > article > div:nth-of-type(2) > div > div > div"").length; } return a();")
+		loop, % cnt
+		{
+			thisArticleID := fn_Web_Insta_Find_Get_nth_ArticleID(A_Index)
+
+			if(findURL = fn_Util_Get_Link_By_URL(thisArticleID))
+			{
+				foundIdx := A_Index
+				foundURL := thisArticleID
+				break, 2
+			}
+
+			isDup := false
+			for i, e in foundIDList
+				if(e = thisArticleID)
+				{
+					isDup := true
+					break
+				}
+
+			if(!isDup)
+				foundIDList.Push(thisArticleID)
+
+			if(foundIDList.Length() >= 50)
+				break, 2
+		}
+
+		cntFloor := p.ExecuteScript("function a() { return document.querySelectorAll(""#react-root > section > main > article > div:nth-of-type(2) > div > div"").length; } return a();")
+		fn_Web_HTML_ScrollToElement("#react-root > section > main > article > div:nth-of-type(2) > div > div:nth-of-type(" cntFloor ") > div:nth-of-type(1) > a > div")
+		sleep, 2500
+	}
+
+	;	못 찾았으면
+	if(foundIdx = -1)
+	{
+		msgbox, 해당 게시글을 찾지 못했습니다.`n프로그램을 재시작합니다.
+		reload
+	}
+
+	;	찾았으면 이동
+	fn_debug_log("Get : " foundURL)
+	p.Get(foundURL)
+
+	;	좋아요
+	fn_debug_log("Try to Like.")
+	fn_Web_HTML_ScrollToElement("article button.coreSpriteHeartOpen", "article button.coreSpriteHeartOpen [class*='filled']")
+	ClickAndWaitFor("article button.coreSpriteHeartOpen", "article button.coreSpriteHeartOpen [class*='filled']")
+	fn_debug_log("Success.")
+
+	;	로그아웃
+	fn_debug_log(A_ThisFunc " Quit and Logout.")
+	p.Close()
+	p.Quit()
+	g_isLogin := false
+}
+
+fn_Util_Get_Link_By_URL(URL) {
+	URL := RegExReplace(URL, "(.*)/$", "$1")
+	RegExMatch(URL, "O)p/(\w*?)(/|$)", out)
+	if(!out.count())
+		return URL
+	return out[1]
 }
 
 ;=====================================================================================;
@@ -1166,7 +1302,7 @@ fn_Web_Insta_Find_Follow_Like(path, searchCnt, cnt, followRate, FollowInterval) 
 				sleep, 250
 
 			fn_debug_log("스크롤 시작")
-			loop, % (idx + 1) // 3 + 1
+			loop, % (idx - 1) // 3 + 1
 			{
 				fn_Web_HTML_ScrollToElement("#react-root > section > main > article > div:nth-of-type(2) > div > div:nth-of-type(" A_Index ") > div:nth-of-type(1) > a > div")
 				sleep, 2500
@@ -1428,7 +1564,28 @@ fn_Web_HTML_ScrollToElement(css, isMiddle := true)
 	else
 		reviseOffset := 0
 
-	p.ExecuteScript("function b() { var headTag = document.querySelector('head'); var newScript = document.createElement('script'); newScript.type = 'text/javascript'; newScript.onload = function() { console.log('자바스크립트 로드 완료'); function a() { $('html,body').animate({scrollTop: " elementTop - reviseOffset "}, 500); } a(); }; newScript.src = 'https://t1.daumcdn.net/tistory_admin/lib/jquery/jquery-3.2.1.min.js'; headTag.appendChild(newScript); } b();")
+	scrollValue := elementTop - reviseOffset
+
+	script =
+	(
+		function scrollTo(element, to, duration) {
+			if (duration <= 0) return;
+			var difference = to - element.scrollTop;
+			var perTick = difference / duration * 10;
+
+			setTimeout(function() {
+				element.scrollTop = element.scrollTop + perTick;
+				if (element.scrollTop === to) return;
+				scrollTo(element, to, duration - 10);
+			}, 10);
+		}
+	)
+
+	;msgbox,% script " scrollTop(document.querySelector('html,body'), " scrollValue ", 600);"
+
+	p.ExecuteScript(script " scrollTo(document.querySelector('html,body'), " scrollValue ", 600);")
+
+	;p.ExecuteScript("function b() { var headTag = document.querySelector('head'); var newScript = document.createElement('script'); newScript.type = 'text/javascript'; newScript.onload = function() { console.log('자바스크립트 로드 완료'); function a() { $('html,body').animate({scrollTop: " elementTop - reviseOffset "}, 500); } a(); }; newScript.src = 'https://t1.daumcdn.net/tistory_admin/lib/jquery/jquery-3.2.1.min.js'; headTag.appendChild(newScript); } b();")
 	sleep, 1000
 }
 
