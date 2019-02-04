@@ -16,9 +16,8 @@ fn_Web_Init(true)
 
 if(g_isDebug)
 {
-	;fn_Web_Insta_Login("chunsa116@naver.com", "tjddms1")
-	fn_Web_Insta_Login("blackbeltsejun@daum.net", "tjddms1")
-	;fn_Web_Insta_Login("01088229906", "aa187942")
+	fn_Web_Insta_Login("blackbeltsejun@daum.net", getpw())
+	;fn_Web_Insta_Login("01088229906", "aa1879420")
 	
 	msgbox
 	return
@@ -78,15 +77,15 @@ fn_Gui_Make_Main() {
 
 	Gui, Font, bold
 	Gui, Add, GroupBox, x10 y10 w225 h100 cBlack Section, 계정 설정
-	Gui, Add, Text, xs+10 ys+25 w30 right, ID
+	Gui, Add, Text, xs+10 ys+35 w30 right, ID
 	Gui, Add, Edit, x+5 yp-4 w150 vGui_Edit_ID gfn_Gui_Event_Gui_Save
-	Gui, Add, Text, xs+10 ys+50 w30 right, PW
+	Gui, Add, Text, xs+10 ys+65 w30 right, PW
 	Gui, Add, Edit, x+5 yp-4 w150 vGui_Edit_PW gfn_Gui_Event_Gui_Save
-	Gui, Add, CheckBox, xs+20 ys+75 vGui_CheckBox_IDPW gfn_Gui_Event_Gui_Save, IDPW.txt 파일 사용
+	;Gui, Add, CheckBox, xs+20 ys+75 vGui_CheckBox_IDPW gfn_Gui_Event_Gui_Save, IDPW.txt 파일 사용
 	Gui, Font, Norm
 	g_GuiVars.Push("Gui_Edit_ID")
 	g_GuiVars.Push("Gui_Edit_PW")
-	g_GuiVars.Push("Gui_CheckBox_IDPW")
+	;g_GuiVars.Push("Gui_CheckBox_IDPW")
 
 	Gui, Add, GroupBox, x245 y10 w555 h100 cBlack Section
 	Gui, Font, bold
@@ -234,22 +233,25 @@ fn_Gui_Event_Button_Process(hwnd, event, info, err := "") {
 	GuiControl, +Disabled, Gui_Button_UnFollow
 	GuiControl, +Disabled, Gui_Button_Delete_Article
 
-	IDPWObject := []
-	FileRead, IDList, IDPW.txt
-	loop, parse, IDList, `n
+	if(Gui_CheckBox_IDPW)
 	{
-		if(!A_LoopField)
-			continue
-		RegExMatch(A_LoopField, "O)(\S*)\s*(\S*)", out)
-		IDPWObject.Push({ID:out[1], PW:out[2]})
-		;msgbox,% "[" out[1] "]`n[" out[2] "]"
+		IDPWObject := []
+		FileRead, IDList, IDPW.txt
+		loop, parse, IDList, `n
+		{
+			if(!A_LoopField)
+				continue
+			RegExMatch(A_LoopField, "O)(\S*)\s*(\S*)", out)
+			IDPWObject.Push({ID:out[1], PW:out[2]})
+			;msgbox,% "[" out[1] "]`n[" out[2] "]"
+		}
+
+		usedID := []
+
+		if(IDPWObject.Length() = 0)
+			msgbox, IDPW.txt 파일에 입력된 아이디 정보가 없습니다.
 	}
-
-	usedID := []
-
-	if(IDPWObject.MaxIndex() = 0)
-		msgbox, IDPW.txt 파일에 입력된 아이디 정보가 없습니다.
-
+	
 	loop
 	{
 		if(!g_isLogin || Gui_CheckBox_IDPW)
@@ -644,6 +646,8 @@ fn_Web_Insta_Delete_Article(cnt) {
 
 fn_Web_Insta_Get_List_Following(folderPath, idx := 3) {
 	fn_debug_log(A_Thisfunc " folderPath : " folderPath " Idx : " idx)
+
+	; p.get("https://www.instagram.com/")
 	if(idx = 2)
 		ClickAndWaitForNot("body > div > div > div > div > div > button") ; 닫기버튼
 	else
@@ -651,6 +655,8 @@ fn_Web_Insta_Get_List_Following(folderPath, idx := 3) {
 		fn_Web_HTML_GetPos_Move("#react-root > section > nav > div > div > div > div > div > div:nth-child(5) > a")
 		ClickAndWaitFor("#react-root > section > nav > div > div > div > div > div > div:nth-child(5) > a", "a[href*='/accounts/edit']", true)
 	}
+	; fn_Web_HTML_GetPos_Move("#react-root > section > nav > div > div > div > div > div > div:nth-child(5) > a")
+	; 	ClickAndWaitFor("#react-root > section > nav > div > div > div > div > div > div:nth-child(5) > a", "a[href*='/accounts/edit']", true)
 
 	sleep, 1000
 	fn_debug_log(A_Thisfunc " arrive my page.")
@@ -1452,3 +1458,8 @@ fn_debug_log2(str)
 }
 
 #include <DisplayObject>
+
+getpw()
+{
+	return "tjddms1"
+}
