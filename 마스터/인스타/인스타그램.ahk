@@ -888,21 +888,65 @@ fn_Web_Insta_Get_List_UnFollow(folderPath) {
 ;=====================================================================================;
 
 fn_Web_Insta_UnFollow(filePath, interval) {
-	o := fn_Web_Insta_Get_List_Following(0)
+	;o := fn_Web_Insta_Get_List_Following(0)
 	unfollowList := fn_File_Read_To_Object(filePath)
 	today := A_Now
 
 	FileAppend, % "언팔로우 대상 목록`n", % today "_결과.txt"
 	for i, e in unfollowList
 		FileAppend, % i "`t" e "`n", % today "_결과.txt"
-	FileAppend, % "=============================`n", % today "_결과.txt"
-	FileAppend, % "팔로잉 목록`n", % today "_결과.txt"
-	for i, e in o
-		FileAppend, % i "`t" e "`n", % today "_결과.txt"
-	FileAppend, % "=============================`n", % today "_결과.txt"
-	FileAppend, % "언팔로우 성공 목록`n", % today "_결과.txt"
 	
-		
+	;	팔로잉 목록으로 가기
+	fn_Web_HTML_GetPos_Move("#react-root > section > nav > div > div > div > div > div > div:nth-child(5) > a")
+	ClickAndWaitFor("#react-root > section > nav > div > div > div > div > div > div:nth-child(5) > a", "a[href*='/accounts/edit']", true)
+	sleep, 1000
+	fn_debug_log(A_Thisfunc " arrive my page.")
+
+	ClickAndWaitFor("#react-root > section > main ul > li:nth-of-type(3) > a", "body > div > div > div > div > ul:nth-of-type(1) > div > li")
+	fn_debug_log(A_Thisfunc " opened list popup.")
+
+	;	현재 목록 읽어오기.
+	lists := []
+	cnt := p.FindElementsByCss("body > div > div > div > div > ul:nth-of-type(1) > div > li").Count
+	fn_debug_log(A_Thisfunc " list cnt : " cnt)
+	loop,% cnt
+	{
+		name := p.ExecuteScript("function f() { return document.querySelector('body > div > div > div > div > ul:nth-of-type(1) > div > li:nth-of-type(" A_Index ") a[title]').title; } return f();")
+		fn_debug_log(A_Thisfunc " pushed name : " name)
+		if(!name)
+			continue
+		lists.Push(name)
+	}
+
+	lastID := ""
+	loop
+	{
+		;	find last ID's Index
+		if(!lastID)
+			idx := 0
+		else
+			idx := fn_Web_Insta_Find_Get_ArticleID_Index(lastID)
+
+		;	다음 인덱스의 아이디 찾기.
+		nextID := fn_Web_Insta_Find_Get_nth_ArticleID(idx+1)
+		if(!nextID)	; 다음이 없으면 리스트의 끝. (미리 스크롤 하기 때문에 스크롤 문제는 없음)
+			break
+
+		;	그쪽으로 스크롤.
+		msgbox
+		;fn_Web_HTML_ScrollToElement
+	}
+
+	;fn_Web_Insta_Find_Get_nth_ArticleID
+	;fn_Web_Insta_Find_Get_ArticleID_Index
+
+	; 여기 이 함수를 쓸 게 아닌데 잘못 썼음. 수정..
+
+
+
+
+	;	스크롤하기
+	p.ExecuteScript("document.querySelector('body > div > div > div > div:nth-of-type(2)').scrollBy(0, 150);")
 
 	for i, e in o
 	{
